@@ -4,13 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Estoque - Office Net</title>
-
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-
   <style>
     body { font-family: Arial, sans-serif; max-width: 980px; margin: 24px auto; padding: 0 12px; }
     .card { border: 1px solid #ddd; border-radius: 12px; padding: 14px; margin: 12px 0; }
-    input, select, button, textarea { padding: 10px; margin: 6px 0; width: 100%; box-sizing: border-box; }
+    input, button { padding: 10px; margin: 6px 0; width: 100%; box-sizing: border-box; }
     button { cursor: pointer; }
     pre { background:#f7f7f7; padding:10px; border-radius:10px; overflow:auto; }
     .ok { color: #0a7a2f; font-weight: 700; }
@@ -20,26 +18,20 @@
 </head>
 <body>
   <h2>Sistema de Estoque - Office Net</h2>
-  <p class="muted">
-    Acesso por e-mail (lista branca). Se seu e-mail não estiver liberado na planilha, vai dar "Acesso negado".
-  </p>
+  <p class="muted">Login por Gmail + lista branca na aba USUARIOS (planilha).</p>
 
   <div class="card">
     <h3>1) Login</h3>
-
     <div id="g_id_onload"
          data-client_id="105963829845-thskkh8b3eai72hup3u5345muhtjbh4v.apps.googleusercontent.com"
-         data-callback="onLogin">
-    </div>
-
+         data-callback="onLogin"></div>
     <div class="g_id_signin" data-type="standard"></div>
-
     <p id="me"></p>
   </div>
 
   <div class="card">
     <h3>2) Consultar Garantia por SN</h3>
-    <input id="sn" placeholder="Digite o SN (Serial Number)" />
+    <input id="sn" placeholder="Digite o SN" />
     <button onclick="findWarranty()">Buscar</button>
     <pre id="snOut">{}</pre>
   </div>
@@ -51,7 +43,8 @@
   </div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycby3MU0vopfrDuwz_AcxKqqXVannNrzeJisnCA74npd1Z6MJ77JVqBwj6RtysuyppgFM/exec";
+    // SUA URL DO APPS SCRIPT:
+    const API_BASE = "https://script.google.com/macros/s/AKfycby3MU0vopfrDuwz_AcxKqqXVannNrzeJisnCA74npd1Z6MJ77JVqBwj6RtysuyppgFM/exec";
     let ID_TOKEN = "";
 
     function setStatus(ok, text) {
@@ -60,32 +53,43 @@
       el.textContent = text;
     }
 
-    async function api(action, payload = {}) {
-      if (!ID_TOKEN) throw new Error("Você precisa fazer login primeiro.");
+    // JSONP helper (sem CORS)
+    function apiJsonp(action, params = {}) {
+      return new Promise((resolve, reject) => {
+        const cbName = "__cb_" + Math.random().toString(36).slice(2);
+        window[cbName] = (data) => {
+          cleanup();
+          resolve(data);
+        };
 
-      const url = API_URL + "?action=" + encodeURIComponent(action);
+        const url = new URL(API_BASE);
+        url.searchParams.set("action", action);
+        url.searchParams.set("callback", cbName);
+        for (const [k, v] of Object.entries(params)) {
+          url.searchParams.set(k, v);
+        }
 
-      const r = await fetch(url, {
-  method: "POST",
-  redirect: "follow",
-  headers: { "Content-Type": "text/plain;charset=utf-8" },
-  body: JSON.stringify({ ...payload, id_token: ID_TOKEN }),
-});
+        const s = document.createElement("script");
+        s.src = url.toString();
+        s.async = true;
+        s.onerror = () => {
+          cleanup();
+          reject(new Error("Falha ao chamar API (script load error)."));
+        };
+        document.body.appendChild(s);
 
-      const data = await r.json();
-      return data;
+        function cleanup() {
+          try { delete window[cbName]; } catch {}
+          if (s && s.parentNode) s.parentNode.removeChild(s);
+        }
+      });
     }
 
     async function onLogin(resp) {
       try {
         ID_TOKEN = resp.credential;
-
-        const data = await api("me");
-        if (!data.ok) {
-          setStatus(false, "Erro: " + (data.error || "Falha no login"));
-          return;
-        }
-
+        const data = await apiJsonp("me", { id_token: ID_TOKEN });
+        if (!data.ok) return setStatus(false, "Erro: " + (data.error || "Falha"));
         setStatus(true, "Logado: " + data.email);
       } catch (err) {
         setStatus(false, "Erro: " + (err && err.message ? err.message : err));
@@ -94,22 +98,22 @@
 
     async function findWarranty() {
       try {
+        if (!ID_TOKEN) return setStatus(false, "Faça login primeiro.");
         const sn = document.getElementById("sn").value.trim();
-        const data = await api("findWarrantyBySN", { sn });
+        const data = await apiJsonp("findWarrantyBySN", { id_token: ID_TOKEN, sn });
         document.getElementById("snOut").textContent = JSON.stringify(data, null, 2);
       } catch (err) {
-        document.getElementById("snOut").textContent =
-          JSON.stringify({ ok: false, error: String(err) }, null, 2);
+        document.getElementById("snOut").textContent = JSON.stringify({ ok:false, error: String(err) }, null, 2);
       }
     }
 
     async function loadStock() {
       try {
-        const data = await api("getStock");
+        if (!ID_TOKEN) return setStatus(false, "Faça login primeiro.");
+        const data = await apiJsonp("getStock", { id_token: ID_TOKEN });
         document.getElementById("stockOut").textContent = JSON.stringify(data, null, 2);
       } catch (err) {
-        document.getElementById("stockOut").textContent =
-          JSON.stringify({ ok: false, error: String(err) }, null, 2);
+        document.getElementById("stockOut").textContent = JSON.stringify({ ok:false, error: String(err) }, null, 2);
       }
     }
   </script>
