@@ -1,1 +1,116 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Estoque - Office Net</title>
 
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 980px; margin: 24px auto; padding: 0 12px; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 14px; margin: 12px 0; }
+    input, select, button, textarea { padding: 10px; margin: 6px 0; width: 100%; box-sizing: border-box; }
+    button { cursor: pointer; }
+    pre { background:#f7f7f7; padding:10px; border-radius:10px; overflow:auto; }
+    .ok { color: #0a7a2f; font-weight: 700; }
+    .err { color: #b00020; font-weight: 700; }
+    .muted { color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h2>Sistema de Estoque - Office Net</h2>
+  <p class="muted">
+    Acesso por e-mail (lista branca). Se seu e-mail não estiver liberado na planilha, vai dar "Acesso negado".
+  </p>
+
+  <div class="card">
+    <h3>1) Login</h3>
+
+    <div id="g_id_onload"
+         data-client_id="105963829845-thskkh8b3eai72hup3u5345muhtjbh4v.apps.googleusercontent.com"
+         data-callback="onLogin">
+    </div>
+
+    <div class="g_id_signin" data-type="standard"></div>
+
+    <p id="me"></p>
+  </div>
+
+  <div class="card">
+    <h3>2) Consultar Garantia por SN</h3>
+    <input id="sn" placeholder="Digite o SN (Serial Number)" />
+    <button onclick="findWarranty()">Buscar</button>
+    <pre id="snOut">{}</pre>
+  </div>
+
+  <div class="card">
+    <h3>3) Saldo do Estoque</h3>
+    <button onclick="loadStock()">Atualizar saldo</button>
+    <pre id="stockOut">{}</pre>
+  </div>
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycby3MU0vopfrDuwz_AcxKqqXVannNrzeJisnCA74npd1Z6MJ77JVqBwj6RtysuyppgFM/exec";
+    let ID_TOKEN = "";
+
+    function setStatus(ok, text) {
+      const el = document.getElementById("me");
+      el.className = ok ? "ok" : "err";
+      el.textContent = text;
+    }
+
+    async function api(action, payload = {}) {
+      if (!ID_TOKEN) throw new Error("Você precisa fazer login primeiro.");
+
+      const url = API_URL + "?action=" + encodeURIComponent(action);
+
+      const r = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...payload, id_token: ID_TOKEN }),
+      });
+
+      const data = await r.json();
+      return data;
+    }
+
+    async function onLogin(resp) {
+      try {
+        ID_TOKEN = resp.credential;
+
+        const data = await api("me");
+        if (!data.ok) {
+          setStatus(false, "Erro: " + (data.error || "Falha no login"));
+          return;
+        }
+
+        setStatus(true, "Logado: " + data.email);
+      } catch (err) {
+        setStatus(false, "Erro: " + (err && err.message ? err.message : err));
+      }
+    }
+
+    async function findWarranty() {
+      try {
+        const sn = document.getElementById("sn").value.trim();
+        const data = await api("findWarrantyBySN", { sn });
+        document.getElementById("snOut").textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        document.getElementById("snOut").textContent =
+          JSON.stringify({ ok: false, error: String(err) }, null, 2);
+      }
+    }
+
+    async function loadStock() {
+      try {
+        const data = await api("getStock");
+        document.getElementById("stockOut").textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        document.getElementById("stockOut").textContent =
+          JSON.stringify({ ok: false, error: String(err) }, null, 2);
+      }
+    }
+  </script>
+</body>
+</html>
