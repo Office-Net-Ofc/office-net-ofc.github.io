@@ -4,118 +4,1340 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Estoque - Office Net</title>
+
+  <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+
   <style>
-    body { font-family: Arial, sans-serif; max-width: 980px; margin: 24px auto; padding: 0 12px; }
-    .card { border: 1px solid #ddd; border-radius: 12px; padding: 14px; margin: 12px 0; }
-    input, button { padding: 10px; margin: 6px 0; width: 100%; box-sizing: border-box; }
-    button { cursor: pointer; }
-    pre { background:#f7f7f7; padding:10px; border-radius:10px; overflow:auto; }
-    .ok { color: #0a7a2f; font-weight: 700; }
-    .err { color: #b00020; font-weight: 700; }
-    .muted { color: #666; font-size: 12px; }
+    :root{
+      --bg:#0b1220;
+      --panel:#0f1a2e;
+      --card:#111f38;
+      --muted:#9db0d0;
+      --text:#e9f0ff;
+      --line:rgba(255,255,255,.10);
+      --ok:#36d399;
+      --warn:#fbbf24;
+      --err:#fb7185;
+      --btn:#2563eb;
+      --btn2:#1d4ed8;
+      --shadow: 0 8px 30px rgba(0,0,0,.35);
+      --radius: 14px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 800px at 20% 10%, rgba(37,99,235,.25), transparent 55%),
+                  radial-gradient(900px 700px at 90% 30%, rgba(34,197,94,.15), transparent 50%),
+                  var(--bg);
+      color:var(--text);
+    }
+    .wrap{max-width:1180px;margin:28px auto;padding:0 14px;}
+    header{
+      display:flex;gap:14px;align-items:center;justify-content:space-between;
+      padding:16px 18px;border:1px solid var(--line);border-radius:var(--radius);
+      background: linear-gradient(180deg, rgba(17,31,56,.85), rgba(15,26,46,.85));
+      box-shadow: var(--shadow);
+    }
+    .brand{display:flex;flex-direction:column;gap:4px}
+    .brand h1{margin:0;font-size:18px;letter-spacing:.2px}
+    .brand small{color:var(--muted)}
+    .right{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+    .pill{
+      display:flex;gap:10px;align-items:center;
+      padding:10px 12px;border-radius:999px;border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      max-width: 520px;
+    }
+    .pill img{width:28px;height:28px;border-radius:50%}
+    .pill .meta{display:flex;flex-direction:column;line-height:1.1}
+    .pill .meta b{font-size:13px}
+    .pill .meta span{font-size:12px;color:var(--muted)}
+    .status{
+      font-weight:700;
+      padding:8px 10px;border-radius:10px;border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      font-size:12px;
+      white-space:nowrap;
+    }
+    .status.ok{color:var(--ok)}
+    .status.err{color:var(--err)}
+    .status.warn{color:var(--warn)}
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:14px;
+      margin-top:14px;
+    }
+    nav.tabs{
+      display:flex;gap:10px;flex-wrap:wrap;
+      padding:10px;border:1px solid var(--line);border-radius:var(--radius);
+      background: rgba(255,255,255,.03);
+    }
+    .tabbtn{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      padding:10px 12px;border-radius:12px;
+      cursor:pointer;
+      font-weight:700;font-size:13px;
+      transition: .15s ease;
+    }
+    .tabbtn:hover{transform: translateY(-1px); background: rgba(255,255,255,.06);}
+    .tabbtn.active{border-color: rgba(37,99,235,.7); background: rgba(37,99,235,.18)}
+    .card{
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      background: rgba(17,31,56,.75);
+      box-shadow: var(--shadow);
+      padding:14px;
+    }
+    .card h2{margin:0 0 10px 0;font-size:15px}
+    .muted{color:var(--muted);font-size:12px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+    .field{display:flex;flex-direction:column;gap:6px;min-width:200px;flex:1}
+    label{font-size:12px;color:var(--muted)}
+    input, select, textarea{
+      width:100%;
+      padding:11px 12px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.20);
+      color:var(--text);
+      outline:none;
+    }
+    textarea{min-height:40px;resize:vertical}
+    .btn{
+      padding:11px 12px;border-radius:12px;border:1px solid rgba(37,99,235,.45);
+      background: linear-gradient(180deg, rgba(37,99,235,.95), rgba(29,78,216,.95));
+      color:white;font-weight:800;cursor:pointer;
+      transition:.15s ease;
+      white-space:nowrap;
+    }
+    .btn:hover{transform:translateY(-1px);filter:brightness(1.05)}
+    .btn.ghost{
+      background: rgba(255,255,255,.06);
+      border:1px solid var(--line);
+      color: var(--text);
+    }
+    .btn.danger{
+      background: rgba(251,113,133,.12);
+      border:1px solid rgba(251,113,133,.35);
+      color: var(--text);
+    }
+    .split{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:14px;
+    }
+    @media (max-width: 980px){
+      .split{grid-template-columns: 1fr}
+      .pill{max-width:100%}
+    }
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      overflow:hidden;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.18);
+    }
+    th, td{
+      padding:10px 10px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      font-size:12px;
+      text-align:left;
+      vertical-align:top;
+    }
+    th{color:rgba(233,240,255,.85);font-size:12px;background: rgba(255,255,255,.05)}
+    tr:last-child td{border-bottom:none}
+    .tag{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:4px 8px;border-radius:999px;border:1px solid var(--line);
+      font-size:11px;background: rgba(255,255,255,.04);
+      white-space:nowrap;
+    }
+    .tag.ok{border-color:rgba(54,211,153,.45); color: var(--ok)}
+    .tag.warn{border-color:rgba(251,191,36,.45); color: var(--warn)}
+    .tag.err{border-color:rgba(251,113,133,.45); color: var(--err)}
+    .kpis{
+      display:grid;gap:12px;
+      grid-template-columns: repeat(4, 1fr);
+    }
+    @media (max-width: 980px){ .kpis{grid-template-columns: repeat(2,1fr)} }
+    .kpi{
+      padding:14px;border-radius:14px;border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+    }
+    .kpi .n{font-size:22px;font-weight:900;margin-top:6px}
+    .kpi .t{color:var(--muted);font-size:12px}
+    .hide{display:none!important}
+    .hint{margin-top:10px;color:var(--muted);font-size:12px}
+    .hr{height:1px;background:var(--line);margin:10px 0}
+    .small{font-size:11px;color:var(--muted)}
+    code.inline{background: rgba(255,255,255,.06); padding:2px 6px;border-radius:8px;border:1px solid var(--line)}
   </style>
 </head>
+
 <body>
-  <h2>Sistema de Estoque - Office Net</h2>
-  <p class="muted">Login por Gmail + lista branca na aba USUARIOS (planilha).</p>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <h1>Sistema de Estoque — Office Net</h1>
+        <small>Login por Gmail + whitelist (aba <b>USUARIOS</b>) + API Apps Script (JSONP)</small>
+      </div>
+      <div class="right">
+        <div id="authPill" class="pill">
+          <div class="meta">
+            <b id="userName">Não autenticado</b>
+            <span id="userEmail" class="muted">Faça login para acessar</span>
+          </div>
+        </div>
+        <div id="status" class="status warn">Aguardando login…</div>
+      </div>
+    </header>
 
-  <div class="card">
-    <h3>1) Login</h3>
-    <div id="g_id_onload"
-         data-client_id="105963829845-thskkh8b3eai72hup3u5345muhtjbh4v.apps.googleusercontent.com"
-         data-callback="onLogin"></div>
-    <div class="g_id_signin" data-type="standard"></div>
-    <p id="me"></p>
-  </div>
+    <div class="grid">
+      <nav class="tabs">
+        <button class="tabbtn active" data-tab="tab-dashboard">Dashboard</button>
+        <button class="tabbtn" data-tab="tab-estoque">Estoque</button>
+        <button class="tabbtn" data-tab="tab-produtos">Produtos</button>
+        <button class="tabbtn" data-tab="tab-mov">Movimentações</button>
+        <button class="tabbtn" data-tab="tab-garantias">Garantias</button>
+        <span style="flex:1"></span>
+        <div id="gsiBtn"></div>
+      </nav>
 
-  <div class="card">
-    <h3>2) Consultar Garantia por SN</h3>
-    <input id="sn" placeholder="Digite o SN" />
-    <button onclick="findWarranty()">Buscar</button>
-    <pre id="snOut">{}</pre>
-  </div>
+      <!-- DASHBOARD -->
+      <section id="tab-dashboard" class="card">
+        <h2>Dashboard</h2>
+        <div class="row">
+          <div class="field">
+            <label>Período (início)</label>
+            <input id="dash_from" type="date" />
+          </div>
+          <div class="field">
+            <label>Período (fim)</label>
+            <input id="dash_to" type="date" />
+          </div>
+          <div class="field">
+            <label>Produto (opcional)</label>
+            <select id="dash_produto">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <button class="btn" onclick="refreshDashboard()">Atualizar</button>
+          <button class="btn ghost" onclick="setDashPreset(30)">Últimos 30 dias</button>
+          <button class="btn ghost" onclick="setDashPreset(7)">Últimos 7 dias</button>
+        </div>
 
-  <div class="card">
-    <h3>3) Saldo do Estoque</h3>
-    <button onclick="loadStock()">Atualizar saldo</button>
-    <pre id="stockOut">{}</pre>
+        <div class="hr"></div>
+
+        <div class="kpis">
+          <div class="kpi">
+            <div class="t">Entradas (IN) no período</div>
+            <div class="n" id="kpi_in">—</div>
+          </div>
+          <div class="kpi">
+            <div class="t">Saídas (OUT) no período</div>
+            <div class="n" id="kpi_out">—</div>
+          </div>
+          <div class="kpi">
+            <div class="t">Ajustes (ADJ) no período</div>
+            <div class="n" id="kpi_adj">—</div>
+          </div>
+          <div class="kpi">
+            <div class="t">Movimentos no período</div>
+            <div class="n" id="kpi_mov">—</div>
+          </div>
+        </div>
+
+        <div class="split" style="margin-top:14px;">
+          <div class="card" style="background: rgba(255,255,255,.03); box-shadow:none;">
+            <h2>Estoque baixo (≤ mínimo)</h2>
+            <div class="small">Baseado no estoque geral (não filtrado por período).</div>
+            <div style="margin-top:10px; overflow:auto;">
+              <table id="tbl_low">
+                <thead>
+                  <tr>
+                    <th>SKU</th><th>Produto</th><th>Saldo</th><th>Mínimo</th><th>Status</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card" style="background: rgba(255,255,255,.03); box-shadow:none;">
+            <h2>Top saídas (OUT)</h2>
+            <div class="small">Top 10 no período selecionado.</div>
+            <div style="margin-top:10px; overflow:auto;">
+              <table id="tbl_topout">
+                <thead>
+                  <tr>
+                    <th>SKU</th><th>Produto</th><th>Saídas</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="hint">
+          Se algo der <span class="tag err">Acesso negado</span>, confira a aba <b>USUARIOS</b> com seu email e <code class="inline">ativo=TRUE</code>.
+        </div>
+      </section>
+
+      <!-- ESTOQUE -->
+      <section id="tab-estoque" class="card hide">
+        <h2>Estoque (saldo por produto)</h2>
+
+        <div class="row">
+          <div class="field">
+            <label>Buscar (SKU ou nome)</label>
+            <input id="stk_q" placeholder="Ex: ONU, cabo, roteador..." oninput="renderStockTable()" />
+          </div>
+          <button class="btn" onclick="refreshStock()">Atualizar</button>
+        </div>
+
+        <div style="margin-top:12px; overflow:auto;">
+          <table id="tbl_stock">
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>Produto</th>
+                <th>Categoria</th>
+                <th>Unidade</th>
+                <th>Saldo</th>
+                <th>Mínimo</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="hint">
+          Dica: “Saldo” é calculado pela aba <b>MOVIMENTOS</b>. Para mexer no estoque, vá em <b>Movimentações</b>.
+        </div>
+      </section>
+
+      <!-- PRODUTOS -->
+      <section id="tab-produtos" class="card hide">
+        <h2>Produtos</h2>
+
+        <div class="split">
+          <div class="card" style="background: rgba(255,255,255,.03); box-shadow:none;">
+            <h2>Cadastrar produto</h2>
+            <div class="row">
+              <div class="field">
+                <label>SKU *</label>
+                <input id="p_sku" placeholder="Ex: ONU-FD600" />
+              </div>
+              <div class="field">
+                <label>Nome *</label>
+                <input id="p_nome" placeholder="Ex: ONU Goldentec FD600..." />
+              </div>
+            </div>
+            <div class="row">
+              <div class="field">
+                <label>Categoria</label>
+                <input id="p_categoria" placeholder="Ex: ONU / Cabo / Ferramenta..." />
+              </div>
+              <div class="field">
+                <label>Unidade</label>
+                <input id="p_unidade" placeholder="un" value="un" />
+              </div>
+              <div class="field">
+                <label>Estoque mínimo</label>
+                <input id="p_min" type="number" value="0" />
+              </div>
+            </div>
+            <div class="row">
+              <button class="btn" onclick="addProduct()">Cadastrar</button>
+              <button class="btn ghost" onclick="clearProductForm()">Limpar</button>
+            </div>
+            <div class="hint" id="prod_msg"></div>
+          </div>
+
+          <div class="card" style="background: rgba(255,255,255,.03); box-shadow:none;">
+            <h2>Editar produto</h2>
+            <div class="small">Selecione um produto abaixo e edite.</div>
+            <div class="row" style="margin-top:10px;">
+              <div class="field">
+                <label>Produto</label>
+                <select id="p_edit_sel" onchange="loadProductToEdit()">
+                  <option value="">Selecione…</option>
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <div class="field">
+                <label>ID</label>
+                <input id="p_edit_id" disabled />
+              </div>
+              <div class="field">
+                <label>SKU</label>
+                <input id="p_edit_sku" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="field">
+                <label>Nome</label>
+                <input id="p_edit_nome" />
+              </div>
+              <div class="field">
+                <label>Categoria</label>
+                <input id="p_edit_cat" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="field">
+                <label>Unidade</label>
+                <input id="p_edit_un" />
+              </div>
+              <div class="field">
+                <label>Mínimo</label>
+                <input id="p_edit_min" type="number" />
+              </div>
+              <div class="field">
+                <label>Ativo</label>
+                <select id="p_edit_ativo">
+                  <option value="TRUE">TRUE</option>
+                  <option value="FALSE">FALSE</option>
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <button class="btn" onclick="updateProduct()">Salvar alterações</button>
+            </div>
+            <div class="hint" id="prod_edit_msg"></div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <h2>Lista de produtos</h2>
+        <div class="row">
+          <div class="field">
+            <label>Buscar</label>
+            <input id="prod_q" placeholder="Filtrar por SKU/nome..." oninput="renderProductsTable()" />
+          </div>
+          <button class="btn" onclick="refreshProducts()">Atualizar</button>
+        </div>
+
+        <div style="margin-top:12px; overflow:auto;">
+          <table id="tbl_products">
+            <thead>
+              <tr>
+                <th>SKU</th><th>Nome</th><th>Categoria</th><th>Un</th><th>Mín</th><th>Ativo</th><th>ID</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- MOVIMENTAÇÕES -->
+      <section id="tab-mov" class="card hide">
+        <h2>Movimentações (IN / OUT / ADJ)</h2>
+
+        <div class="split">
+          <div class="card" style="background: rgba(255,255,255,.03); box-shadow:none;">
+            <h2>Nova movimentação</h2>
+
+            <div class="row">
+              <div class="field">
+                <label>Produto *</label>
+                <select id="m_produto">
+                  <option value="">Selecione…</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Data *</label>
+                <input id="m_data" type="date" />
+              </div>
+              <div class="field">
+                <label>Tipo *</label>
+                <select id="m_tipo">
+                  <option value="IN">IN (Entrada)</option>
+                  <option value="OUT">OUT (Saída)</option>
+                  <option value="ADJ">ADJ (Ajuste)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="field">
+                <label>Quantidade *</label>
+                <input id="m_qtd" type="number" placeholder="Ex: 3 (ADJ aceita negativo)" />
+              </div>
+              <div class="field">
+                <label>Documento</label>
+                <input id="m_doc" placeholder="NF, OS, etc." />
+              </div>
+              <div class="field">
+                <label>Fornecedor</label>
+                <input id="m_forn" placeholder="Nome do fornecedor" />
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="field">
+                <label>Observação</label>
+                <textarea id="m_obs" placeholder="Opcional"></textarea>
+              </div>
+            </div>
+
+            <div class="row">
+              <button class="btn" onclick="addMovement()">Salvar</button>
+              <button class="btn ghost" onclick="clearMovementForm()">Limpar</button>
+            </div>
+
+            <div class="hint" id="mov_msg"></div>
+            <div class="hint small">
+              Dica: se seu Apps Script estiver bloqueando estoque negativo, OUT/ADJ negativo pode ser recusado.
+            </div>
+          </div>
+
+          <div class="card" style="background: rgba(255,255,255,.03); box-shadow:none;">
+            <h2>Histórico</h2>
+            <div class="row">
+              <div class="field">
+                <label>Produto</label>
+                <select id="mh_produto">
+                  <option value="">Todos</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Tipo</label>
+                <select id="mh_tipo">
+                  <option value="">Todos</option>
+                  <option value="IN">IN</option>
+                  <option value="OUT">OUT</option>
+                  <option value="ADJ">ADJ</option>
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <div class="field">
+                <label>De</label>
+                <input id="mh_from" type="date" />
+              </div>
+              <div class="field">
+                <label>Até</label>
+                <input id="mh_to" type="date" />
+              </div>
+              <button class="btn" onclick="refreshMovements()">Filtrar</button>
+              <button class="btn ghost" onclick="resetMovFilters()">Limpar filtros</button>
+            </div>
+
+            <div style="margin-top:12px; overflow:auto; max-height:420px;">
+              <table id="tbl_mov">
+                <thead>
+                  <tr>
+                    <th>Data</th><th>Produto</th><th>Tipo</th><th>Qtd</th><th>Documento</th><th>Fornecedor</th><th>Usuário</th><th>Obs</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+
+            <div class="hint" id="mov_list_msg"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- GARANTIAS -->
+      <section id="tab-garantias" class="card hide">
+        <h2>Garantias</h2>
+
+        <div class="split">
+          <div class="card" style="background: rgba(255,255,255,.03); box-shadow:none;">
+            <h2>Cadastrar garantia (SN)</h2>
+            <div class="row">
+              <div class="field">
+                <label>SN *</label>
+                <input id="w_sn" placeholder="Número de série" />
+              </div>
+              <div class="field">
+                <label>Produto *</label>
+                <select id="w_produto">
+                  <option value="">Selecione…</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Data de entrada *</label>
+                <input id="w_data" type="date" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="field">
+                <label>Fornecedor</label>
+                <input id="w_forn" placeholder="Nome do fornecedor" />
+              </div>
+              <div class="field">
+                <label>Nota fiscal</label>
+                <input id="w_nf" placeholder="Número da NF" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="field">
+                <label>Obs</label>
+                <textarea id="w_obs" placeholder="Opcional"></textarea>
+              </div>
+            </div>
+            <div class="row">
+              <button class="btn" onclick="addWarranty()">Cadastrar</button>
+              <button class="btn ghost" onclick="clearWarrantyForm()">Limpar</button>
+            </div>
+            <div class="hint" id="war_msg"></div>
+          </div>
+
+          <div class="card" style="background: rgba(255,255,255,.03); box-shadow:none;">
+            <h2>Buscar por SN</h2>
+            <div class="row">
+              <div class="field">
+                <label>SN</label>
+                <input id="ws_sn" placeholder="Digite o SN" />
+              </div>
+              <button class="btn" onclick="findWarranty()">Buscar</button>
+            </div>
+
+            <div style="margin-top:12px; overflow:auto;">
+              <table id="tbl_ws">
+                <thead>
+                  <tr>
+                    <th>SN</th><th>Produto</th><th>Entrada</th><th>Fornecedor</th><th>NF</th><th>Obs</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+
+            <div class="hr"></div>
+
+            <h2>Lista de garantias</h2>
+            <div class="row">
+              <button class="btn" onclick="refreshWarranties()">Atualizar lista</button>
+            </div>
+
+            <div style="margin-top:12px; overflow:auto; max-height:320px;">
+              <table id="tbl_war">
+                <thead>
+                  <tr>
+                    <th>SN</th><th>Produto</th><th>Entrada</th><th>Fornecedor</th><th>NF</th><th>Usuário</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+
+            <div class="hint" id="war_list_msg"></div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="card" style="background: rgba(255,255,255,.03); box-shadow:none;">
+        <div class="small">
+          API: <code class="inline" id="apiBaseTxt"></code>
+        </div>
+      </footer>
+    </div>
   </div>
 
   <script>
-    // SUA URL DO APPS SCRIPT:
+    // =========================
+    // CONFIG
+    // =========================
     const API_BASE = "https://script.google.com/macros/s/AKfycby3MU0vopfrDuwz_AcxKqqXVannNrzeJisnCA74npd1Z6MJ77JVqBwj6RtysuyppgFM/exec";
-    let ID_TOKEN = "";
+    const GOOGLE_CLIENT_ID = "105963829845-thskkh8b3eai72hup3u5345muhtjbh4v.apps.googleusercontent.com";
 
-    function setStatus(ok, text) {
-      const el = document.getElementById("me");
-      el.className = ok ? "ok" : "err";
+    let ID_TOKEN = "";
+    let ME = null;
+
+    // cache
+    let PRODUCTS = [];
+    let STOCK = [];
+    let MOVS = [];
+    let WARRANTS = [];
+
+    document.getElementById("apiBaseTxt").textContent = API_BASE;
+
+    // =========================
+    // UI helpers
+    // =========================
+    function setStatus(type, text){
+      const el = document.getElementById("status");
+      el.classList.remove("ok","err","warn");
+      el.classList.add(type);
       el.textContent = text;
     }
 
-    // JSONP helper (sem CORS)
+    function requireAuth(){
+      if(!ID_TOKEN){
+        setStatus("warn", "Faça login primeiro.");
+        return false;
+      }
+      return true;
+    }
+
+    function money(n){
+      const v = Number(n||0);
+      return Number.isFinite(v) ? v.toLocaleString("pt-BR") : String(n||"");
+    }
+
+    function esc(s){
+      return String(s ?? "").replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
+    }
+
+    function pidToName(pid){
+      const p = PRODUCTS.find(x => String(x.id) === String(pid));
+      return p ? `${p.sku} — ${p.nome}` : pid;
+    }
+
+    function tagStatusForStock(saldo, minimo){
+      const a = Number(saldo||0);
+      const m = Number(minimo||0);
+      if (a <= m) return { cls: "warn", txt: "Baixo" };
+      return { cls: "ok", txt: "OK" };
+    }
+
+    // =========================
+    // Tabs
+    // =========================
+    document.querySelectorAll(".tabbtn").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        document.querySelectorAll(".tabbtn").forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+        const tab = btn.getAttribute("data-tab");
+        document.querySelectorAll("section[id^='tab-']").forEach(sec=>{
+          sec.classList.toggle("hide", sec.id !== tab);
+        });
+      });
+    });
+
+    // =========================
+    // JSONP API
+    // =========================
     function apiJsonp(action, params = {}) {
       return new Promise((resolve, reject) => {
         const cbName = "__cb_" + Math.random().toString(36).slice(2);
-        window[cbName] = (data) => {
-          cleanup();
-          resolve(data);
-        };
-
         const url = new URL(API_BASE);
         url.searchParams.set("action", action);
         url.searchParams.set("callback", cbName);
-        for (const [k, v] of Object.entries(params)) {
-          url.searchParams.set(k, v);
-        }
+        for (const [k,v] of Object.entries(params)) url.searchParams.set(k, v);
 
         const s = document.createElement("script");
-        s.src = url.toString();
         s.async = true;
-        s.onerror = () => {
-          cleanup();
-          reject(new Error("Falha ao chamar API (script load error)."));
-        };
-        document.body.appendChild(s);
 
-        function cleanup() {
+        function cleanup(){
           try { delete window[cbName]; } catch {}
-          if (s && s.parentNode) s.parentNode.removeChild(s);
+          try { s.remove(); } catch {}
         }
+
+        window[cbName] = (data) => { cleanup(); resolve(data); };
+        s.onerror = () => { cleanup(); reject(new Error("Falha ao chamar API (script load error).")); };
+        s.src = url.toString();
+        document.body.appendChild(s);
       });
     }
 
-    async function onLogin(resp) {
-      try {
+    async function api(action, params = {}){
+      if(!requireAuth()) return { ok:false, error:"Sem login" };
+      return apiJsonp(action, { ...params, id_token: ID_TOKEN });
+    }
+
+    // =========================
+    // Auth (GSI robust)
+    // =========================
+    function initGSI(){
+      if(!window.google || !google.accounts || !google.accounts.id){
+        setTimeout(initGSI, 200);
+        return;
+      }
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: onLogin
+      });
+      google.accounts.id.renderButton(
+        document.getElementById("gsiBtn"),
+        { theme: "outline", size: "large", text: "signin_with", shape: "pill" }
+      );
+      google.accounts.id.prompt(); // opcional
+    }
+
+    async function onLogin(resp){
+      try{
         ID_TOKEN = resp.credential;
-        const data = await apiJsonp("me", { id_token: ID_TOKEN });
-        if (!data.ok) return setStatus(false, "Erro: " + (data.error || "Falha"));
-        setStatus(true, "Logado: " + data.email);
-      } catch (err) {
-        setStatus(false, "Erro: " + (err && err.message ? err.message : err));
+        const me = await apiJsonp("me", { id_token: ID_TOKEN });
+        if(!me.ok){
+          ME = null;
+          setStatus("err", "Login falhou: " + (me.error || "erro"));
+          document.getElementById("userName").textContent = "Acesso negado";
+          document.getElementById("userEmail").textContent = me.error || "";
+          return;
+        }
+
+        ME = me;
+        setStatus("ok", "Logado: " + me.email);
+        document.getElementById("userName").textContent = me.name || "Usuário";
+        document.getElementById("userEmail").textContent = me.email || "";
+        if(me.picture){
+          const pill = document.getElementById("authPill");
+          if(!pill.querySelector("img")){
+            const img = document.createElement("img");
+            img.src = me.picture;
+            pill.prepend(img);
+          } else {
+            pill.querySelector("img").src = me.picture;
+          }
+        }
+
+        // carregar tudo de uma vez (base do app)
+        await warmup();
+      }catch(err){
+        setStatus("err", "Erro: " + (err?.message || err));
       }
     }
 
-    async function findWarranty() {
-      try {
-        if (!ID_TOKEN) return setStatus(false, "Faça login primeiro.");
-        const sn = document.getElementById("sn").value.trim();
-        const data = await apiJsonp("findWarrantyBySN", { id_token: ID_TOKEN, sn });
-        document.getElementById("snOut").textContent = JSON.stringify(data, null, 2);
-      } catch (err) {
-        document.getElementById("snOut").textContent = JSON.stringify({ ok:false, error: String(err) }, null, 2);
+    // =========================
+    // Warmup
+    // =========================
+    function todayISO(){
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth()+1).padStart(2,"0");
+      const dd = String(d.getDate()).padStart(2,"0");
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function setDashPreset(days){
+      const to = new Date();
+      const from = new Date(Date.now() - days*24*60*60*1000);
+      const f = `${from.getFullYear()}-${String(from.getMonth()+1).padStart(2,"0")}-${String(from.getDate()).padStart(2,"0")}`;
+      const t = `${to.getFullYear()}-${String(to.getMonth()+1).padStart(2,"0")}-${String(to.getDate()).padStart(2,"0")}`;
+      document.getElementById("dash_from").value = f;
+      document.getElementById("dash_to").value = t;
+      refreshDashboard();
+    }
+
+    async function warmup(){
+      // datas padrões dashboard
+      if(!document.getElementById("dash_to").value){
+        document.getElementById("dash_to").value = todayISO();
+      }
+      if(!document.getElementById("dash_from").value){
+        setDashPreset(30);
+      }
+
+      await refreshProducts();
+      await refreshStock();
+      await refreshDashboard();
+
+      // preenche datas default em forms
+      document.getElementById("m_data").value = todayISO();
+      document.getElementById("w_data").value = todayISO();
+    }
+
+    // =========================
+    // PRODUCTS
+    // =========================
+    function clearProductForm(){
+      ["p_sku","p_nome","p_categoria","p_unidade","p_min"].forEach(id=>document.getElementById(id).value = (id==="p_unidade"?"un":id==="p_min"?"0":""));
+      document.getElementById("prod_msg").textContent = "";
+    }
+
+    async function refreshProducts(){
+      const out = await api("listProducts");
+      if(!out.ok){
+        setStatus("err", out.error || "Falha listProducts");
+        return;
+      }
+      PRODUCTS = (out.data || []).map(x => ({
+        ...x,
+        estoque_min: Number(x.estoque_min || 0),
+        ativo: String(x.ativo || "").toUpperCase()
+      }));
+
+      renderProductsTable();
+      fillProductSelects();
+      setStatus("ok", "Produtos carregados.");
+    }
+
+    function renderProductsTable(){
+      const q = (document.getElementById("prod_q")?.value || "").trim().toLowerCase();
+      const tbody = document.querySelector("#tbl_products tbody");
+      tbody.innerHTML = "";
+
+      const rows = PRODUCTS
+        .filter(p => !q || String(p.sku||"").toLowerCase().includes(q) || String(p.nome||"").toLowerCase().includes(q))
+        .sort((a,b)=> String(a.nome||"").localeCompare(String(b.nome||"")));
+
+      for(const p of rows){
+        const ativo = (String(p.ativo||"").toUpperCase()==="TRUE");
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${esc(p.sku)}</td>
+          <td>${esc(p.nome)}</td>
+          <td>${esc(p.categoria||"")}</td>
+          <td>${esc(p.unidade||"")}</td>
+          <td>${money(p.estoque_min)}</td>
+          <td>${ativo ? '<span class="tag ok">TRUE</span>' : '<span class="tag err">FALSE</span>'}</td>
+          <td class="small">${esc(p.id)}</td>
+        `;
+        tbody.appendChild(tr);
       }
     }
 
-    async function loadStock() {
-      try {
-        if (!ID_TOKEN) return setStatus(false, "Faça login primeiro.");
-        const data = await apiJsonp("getStock", { id_token: ID_TOKEN });
-        document.getElementById("stockOut").textContent = JSON.stringify(data, null, 2);
-      } catch (err) {
-        document.getElementById("stockOut").textContent = JSON.stringify({ ok:false, error: String(err) }, null, 2);
+    function fillProductSelects(){
+      const selects = [
+        { id:"m_produto", includeAll:false },
+        { id:"mh_produto", includeAll:true },
+        { id:"w_produto", includeAll:false },
+        { id:"dash_produto", includeAll:true },
+        { id:"p_edit_sel", includeAll:false, placeholder:"Selecione…" }
+      ];
+
+      for(const s of selects){
+        const el = document.getElementById(s.id);
+        if(!el) continue;
+
+        const current = el.value;
+        el.innerHTML = "";
+        if(s.includeAll){
+          const op = document.createElement("option");
+          op.value = "";
+          op.textContent = "Todos";
+          el.appendChild(op);
+        } else if(s.placeholder){
+          const op = document.createElement("option");
+          op.value = "";
+          op.textContent = s.placeholder;
+          el.appendChild(op);
+        } else {
+          const op = document.createElement("option");
+          op.value = "";
+          op.textContent = "Selecione…";
+          el.appendChild(op);
+        }
+
+        PRODUCTS
+          .slice()
+          .sort((a,b)=> String(a.nome||"").localeCompare(String(b.nome||"")))
+          .forEach(p=>{
+            const op = document.createElement("option");
+            op.value = p.id;
+            op.textContent = `${p.sku} — ${p.nome}`;
+            el.appendChild(op);
+          });
+
+        // tenta manter valor
+        if(current) el.value = current;
       }
     }
+
+    async function addProduct(){
+      const sku = document.getElementById("p_sku").value.trim();
+      const nome = document.getElementById("p_nome").value.trim();
+      const categoria = document.getElementById("p_categoria").value.trim();
+      const unidade = (document.getElementById("p_unidade").value.trim() || "un");
+      const estoque_min = document.getElementById("p_min").value;
+
+      const msg = document.getElementById("prod_msg");
+      msg.textContent = "";
+
+      if(!sku || !nome){
+        msg.textContent = "Preencha SKU e Nome.";
+        return;
+      }
+
+      const out = await api("addProduct", { sku, nome, categoria, unidade, estoque_min });
+      if(!out.ok){
+        msg.textContent = "Erro: " + (out.error || "falha");
+        setStatus("err", out.error || "Falha addProduct");
+        return;
+      }
+
+      msg.textContent = "Produto cadastrado. ID: " + out.id;
+      await refreshProducts();
+      await refreshStock();
+    }
+
+    function loadProductToEdit(){
+      const id = document.getElementById("p_edit_sel").value;
+      const p = PRODUCTS.find(x=>String(x.id)===String(id));
+      if(!p){
+        ["p_edit_id","p_edit_sku","p_edit_nome","p_edit_cat","p_edit_un","p_edit_min"].forEach(x=>document.getElementById(x).value="");
+        document.getElementById("p_edit_ativo").value="TRUE";
+        return;
+      }
+      document.getElementById("p_edit_id").value = p.id || "";
+      document.getElementById("p_edit_sku").value = p.sku || "";
+      document.getElementById("p_edit_nome").value = p.nome || "";
+      document.getElementById("p_edit_cat").value = p.categoria || "";
+      document.getElementById("p_edit_un").value = p.unidade || "";
+      document.getElementById("p_edit_min").value = Number(p.estoque_min || 0);
+      document.getElementById("p_edit_ativo").value = (String(p.ativo||"").toUpperCase()==="TRUE" ? "TRUE" : "FALSE");
+    }
+
+    async function updateProduct(){
+      const id = document.getElementById("p_edit_id").value.trim();
+      const sku = document.getElementById("p_edit_sku").value.trim();
+      const nome = document.getElementById("p_edit_nome").value.trim();
+      const categoria = document.getElementById("p_edit_cat").value.trim();
+      const unidade = document.getElementById("p_edit_un").value.trim();
+      const estoque_min = document.getElementById("p_edit_min").value;
+      const ativo = document.getElementById("p_edit_ativo").value;
+
+      const msg = document.getElementById("prod_edit_msg");
+      msg.textContent = "";
+
+      if(!id){
+        msg.textContent = "Selecione um produto para editar.";
+        return;
+      }
+
+      const out = await api("updateProduct", { id, sku, nome, categoria, unidade, estoque_min, ativo });
+      if(!out.ok){
+        msg.textContent = "Erro: " + (out.error || "falha");
+        setStatus("err", out.error || "Falha updateProduct");
+        return;
+      }
+
+      msg.textContent = "Produto atualizado.";
+      await refreshProducts();
+      await refreshStock();
+    }
+
+    // =========================
+    // STOCK
+    // =========================
+    async function refreshStock(){
+      const out = await api("getStock");
+      if(!out.ok){
+        setStatus("err", out.error || "Falha getStock");
+        return;
+      }
+      STOCK = (out.data || []).map(x => ({
+        ...x,
+        saldo: Number(x.saldo || 0),
+        estoque_min: Number(x.estoque_min || 0)
+      }));
+      renderStockTable();
+      // estoque ajuda dashboard/lowstock se precisar
+    }
+
+    function renderStockTable(){
+      const q = (document.getElementById("stk_q")?.value || "").trim().toLowerCase();
+      const tbody = document.querySelector("#tbl_stock tbody");
+      tbody.innerHTML = "";
+
+      const rows = STOCK
+        .filter(p => !q || String(p.sku||"").toLowerCase().includes(q) || String(p.nome||"").toLowerCase().includes(q))
+        .sort((a,b)=> String(a.nome||"").localeCompare(String(b.nome||"")));
+
+      for(const p of rows){
+        const st = tagStatusForStock(p.saldo, p.estoque_min);
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${esc(p.sku)}</td>
+          <td>${esc(p.nome)}</td>
+          <td>${esc(p.categoria||"")}</td>
+          <td>${esc(p.unidade||"")}</td>
+          <td><b>${money(p.saldo)}</b></td>
+          <td>${money(p.estoque_min)}</td>
+          <td><span class="tag ${st.cls}">${st.txt}</span></td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    // =========================
+    // MOVEMENTS
+    // =========================
+    function clearMovementForm(){
+      document.getElementById("m_produto").value = "";
+      document.getElementById("m_tipo").value = "IN";
+      document.getElementById("m_qtd").value = "";
+      document.getElementById("m_doc").value = "";
+      document.getElementById("m_forn").value = "";
+      document.getElementById("m_obs").value = "";
+      document.getElementById("mov_msg").textContent = "";
+      if(!document.getElementById("m_data").value) document.getElementById("m_data").value = todayISO();
+    }
+
+    async function addMovement(){
+      const produto_id = document.getElementById("m_produto").value;
+      const data = document.getElementById("m_data").value;
+      const tipo = document.getElementById("m_tipo").value;
+      const quantidade = document.getElementById("m_qtd").value;
+      const documento = document.getElementById("m_doc").value.trim();
+      const fornecedor = document.getElementById("m_forn").value.trim();
+      const obs = document.getElementById("m_obs").value.trim();
+
+      const msg = document.getElementById("mov_msg");
+      msg.textContent = "";
+
+      if(!produto_id || !data || !tipo || !quantidade){
+        msg.textContent = "Preencha Produto, Data, Tipo e Quantidade.";
+        return;
+      }
+
+      const out = await api("addMovement", { produto_id, data, tipo, quantidade, documento, fornecedor, obs });
+      if(!out.ok){
+        msg.textContent = "Erro: " + (out.error || "falha");
+        setStatus("err", out.error || "Falha addMovement");
+        return;
+      }
+
+      msg.textContent = "Movimentação salva. ID: " + out.id;
+      setStatus("ok", "Movimentação registrada.");
+      await refreshStock();
+      await refreshMovements();
+      await refreshDashboard();
+    }
+
+    function resetMovFilters(){
+      document.getElementById("mh_produto").value = "";
+      document.getElementById("mh_tipo").value = "";
+      document.getElementById("mh_from").value = "";
+      document.getElementById("mh_to").value = "";
+      refreshMovements();
+    }
+
+    async function refreshMovements(){
+      const produto_id = document.getElementById("mh_produto").value;
+      const tipo = document.getElementById("mh_tipo").value;
+      const date_from = document.getElementById("mh_from").value;
+      const date_to = document.getElementById("mh_to").value;
+
+      const out = await api("listMovements", { produto_id, tipo, date_from, date_to });
+      const msg = document.getElementById("mov_list_msg");
+      msg.textContent = "";
+
+      if(!out.ok){
+        msg.textContent = "Erro: " + (out.error || "falha");
+        setStatus("err", out.error || "Falha listMovements");
+        return;
+      }
+
+      MOVS = out.data || [];
+      renderMovementsTable();
+      msg.textContent = `Total: ${MOVS.length} movimento(s).`;
+    }
+
+    function renderMovementsTable(){
+      const tbody = document.querySelector("#tbl_mov tbody");
+      tbody.innerHTML = "";
+
+      // tenta mapear produto_id -> nome
+      const byId = new Map(PRODUCTS.map(p => [String(p.id), `${p.sku} — ${p.nome}`]));
+
+      for(const m of MOVS){
+        const t = String(m.tipo||"").toUpperCase();
+        const tTag = t==="IN" ? "ok" : (t==="OUT" ? "err" : "warn");
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${esc(m.data||"")}</td>
+          <td>${esc(byId.get(String(m.produto_id)) || m.produto_id || "")}</td>
+          <td><span class="tag ${tTag}">${esc(t)}</span></td>
+          <td><b>${money(m.quantidade)}</b></td>
+          <td>${esc(m.documento||"")}</td>
+          <td>${esc(m.fornecedor||"")}</td>
+          <td class="small">${esc(m.usuario_email||"")}</td>
+          <td>${esc(m.obs||"")}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    // =========================
+    // WARRANTIES
+    // =========================
+    function clearWarrantyForm(){
+      document.getElementById("w_sn").value = "";
+      document.getElementById("w_produto").value = "";
+      document.getElementById("w_data").value = todayISO();
+      document.getElementById("w_forn").value = "";
+      document.getElementById("w_nf").value = "";
+      document.getElementById("w_obs").value = "";
+      document.getElementById("war_msg").textContent = "";
+    }
+
+    async function addWarranty(){
+      const sn = document.getElementById("w_sn").value.trim();
+      const produto_id = document.getElementById("w_produto").value;
+      const data_entrada = document.getElementById("w_data").value;
+      const fornecedor = document.getElementById("w_forn").value.trim();
+      const nota_fiscal = document.getElementById("w_nf").value.trim();
+      const obs = document.getElementById("w_obs").value.trim();
+
+      const msg = document.getElementById("war_msg");
+      msg.textContent = "";
+
+      if(!sn || !produto_id || !data_entrada){
+        msg.textContent = "Preencha SN, Produto e Data de entrada.";
+        return;
+      }
+
+      const out = await api("addWarranty", { sn, produto_id, data_entrada, fornecedor, nota_fiscal, obs });
+      if(!out.ok){
+        msg.textContent = "Erro: " + (out.error || "falha");
+        setStatus("err", out.error || "Falha addWarranty");
+        return;
+      }
+
+      msg.textContent = "Garantia cadastrada. ID: " + out.id;
+      setStatus("ok", "Garantia cadastrada.");
+      await refreshWarranties();
+    }
+
+    async function findWarranty(){
+      const sn = document.getElementById("ws_sn").value.trim();
+      const tbody = document.querySelector("#tbl_ws tbody");
+      tbody.innerHTML = "";
+
+      if(!sn){
+        tbody.innerHTML = `<tr><td colspan="6" class="muted">Digite um SN.</td></tr>`;
+        return;
+      }
+
+      const out = await api("findWarrantyBySN", { sn });
+      if(!out.ok){
+        tbody.innerHTML = `<tr><td colspan="6"><span class="tag err">Erro</span> ${esc(out.error||"falha")}</td></tr>`;
+        setStatus("err", out.error || "Falha findWarrantyBySN");
+        return;
+      }
+
+      const w = out.data;
+      if(!w){
+        tbody.innerHTML = `<tr><td colspan="6"><span class="tag warn">Não encontrado</span> SN não cadastrado.</td></tr>`;
+        return;
+      }
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${esc(w.sn||"")}</td>
+        <td>${esc(pidToName(w.produto_id)||"")}</td>
+        <td>${esc(w.data_entrada||"")}</td>
+        <td>${esc(w.fornecedor||"")}</td>
+        <td>${esc(w.nota_fiscal||"")}</td>
+        <td>${esc(w.obs||"")}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    async function refreshWarranties(){
+      const out = await api("listWarranties");
+      const msg = document.getElementById("war_list_msg");
+      msg.textContent = "";
+
+      if(!out.ok){
+        msg.textContent = "Erro: " + (out.error || "falha");
+        setStatus("err", out.error || "Falha listWarranties");
+        return;
+      }
+
+      WARRANTS = out.data || [];
+      renderWarrantiesTable();
+      msg.textContent = `Total: ${WARRANTS.length} garantia(s).`;
+    }
+
+    function renderWarrantiesTable(){
+      const tbody = document.querySelector("#tbl_war tbody");
+      tbody.innerHTML = "";
+
+      const rows = WARRANTS
+        .slice()
+        .sort((a,b)=> String(b.data_entrada||"").localeCompare(String(a.data_entrada||"")));
+
+      for(const w of rows){
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${esc(w.sn||"")}</td>
+          <td>${esc(pidToName(w.produto_id)||"")}</td>
+          <td>${esc(w.data_entrada||"")}</td>
+          <td>${esc(w.fornecedor||"")}</td>
+          <td>${esc(w.nota_fiscal||"")}</td>
+          <td class="small">${esc(w.usuario_email||"")}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    // =========================
+    // DASHBOARD
+    // =========================
+    async function refreshDashboard(){
+      const date_from = document.getElementById("dash_from").value;
+      const date_to = document.getElementById("dash_to").value;
+      const produto_id = document.getElementById("dash_produto").value;
+
+      const out = await api("getDashboard", { date_from, date_to, produto_id });
+      if(!out.ok){
+        setStatus("err", out.error || "Falha getDashboard");
+        return;
+      }
+
+      const d = out.data || {};
+      const k = d.kpis || { totalIn:0, totalOut:0, totalAdj:0, movimentos:0 };
+
+      document.getElementById("kpi_in").textContent = money(k.totalIn);
+      document.getElementById("kpi_out").textContent = money(k.totalOut);
+      document.getElementById("kpi_adj").textContent = money(k.totalAdj);
+      document.getElementById("kpi_mov").textContent = money(k.movimentos);
+
+      // low stock
+      const low = d.lowStock || [];
+      const tbodyLow = document.querySelector("#tbl_low tbody");
+      tbodyLow.innerHTML = "";
+      if(low.length === 0){
+        tbodyLow.innerHTML = `<tr><td colspan="5" class="muted">Sem itens em estoque baixo.</td></tr>`;
+      } else {
+        for(const x of low){
+          const st = tagStatusForStock(x.saldo, x.estoque_min);
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${esc(x.sku||"")}</td>
+            <td>${esc(x.nome||"")}</td>
+            <td><b>${money(x.saldo)}</b></td>
+            <td>${money(x.estoque_min)}</td>
+            <td><span class="tag ${st.cls}">${st.txt}</span></td>
+          `;
+          tbodyLow.appendChild(tr);
+        }
+      }
+
+      // top out
+      const top = d.topOut || [];
+      const tbodyTop = document.querySelector("#tbl_topout tbody");
+      tbodyTop.innerHTML = "";
+      if(top.length === 0){
+        tbodyTop.innerHTML = `<tr><td colspan="3" class="muted">Sem dados de saída no período.</td></tr>`;
+      } else {
+        for(const x of top){
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${esc(x.sku||"")}</td>
+            <td>${esc(x.nome||"")}</td>
+            <td><b>${money(x.out)}</b></td>
+          `;
+          tbodyTop.appendChild(tr);
+        }
+      }
+
+      setStatus("ok", "Dashboard atualizado.");
+    }
+
+    // =========================
+    // start
+    // =========================
+    initGSI();
+    setStatus("warn", "Aguardando login…");
   </script>
 </body>
 </html>
