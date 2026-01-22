@@ -66,10 +66,11 @@
       const url = API_URL + "?action=" + encodeURIComponent(action);
 
       const r = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...payload, id_token: ID_TOKEN }),
-      });
+  method: "POST",
+  redirect: "follow",
+  headers: { "Content-Type": "text/plain;charset=utf-8" },
+  body: JSON.stringify({ ...payload, id_token: ID_TOKEN }),
+});
 
       const data = await r.json();
       return data;
